@@ -48,11 +48,13 @@ body {
   -webkit-font-smoothing:antialiased;
   cursor:none;
 }
-/* Noise texture on bg */
+/* Grain خفيف بـ CSS فقط — بدون SVG filter */
 body::after {
   content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-  opacity:.04;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.03;
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px
+  );
 }
 
 /* ══════════ CUSTOM CURSOR ══════════ */
@@ -116,33 +118,22 @@ nav {
   text-align:center;
 }
 
-/* Subtle ink-wash blobs on cream */
+/* Subtle ink-wash blobs — 2 فقط للأداء */
 .hero-glow {
   position:absolute; pointer-events:none; z-index:0;
-  border-radius:50%; filter:blur(90px);
-  will-change:transform; transition:transform .25s ease-out;
+  border-radius:50%; filter:blur(60px);
+  transition:transform .3s ease-out;
 }
 .glow-a {
-  width:550px; height:550px; top:-80px; right:-60px;
-  background:radial-gradient(circle, rgba(200,255,0,.22), transparent 70%);
+  width:480px; height:480px; top:-60px; right:-40px;
+  background:radial-gradient(circle, rgba(200,255,0,.2), transparent 70%);
 }
 .glow-b {
-  width:480px; height:480px; bottom:-40px; left:-60px;
-  background:radial-gradient(circle, rgba(196,191,255,.35), transparent 70%);
+  width:420px; height:420px; bottom:-30px; left:-50px;
+  background:radial-gradient(circle, rgba(196,191,255,.3), transparent 70%);
 }
-.glow-c {
-  width:380px; height:380px; top:30%; left:35%;
-  background:radial-gradient(circle, rgba(255,184,212,.25), transparent 70%);
-  animation:gcDrift 16s ease-in-out infinite alternate;
-}
-.glow-d {
-  position:absolute; pointer-events:none; z-index:0;
-  border-radius:50%; filter:blur(90px);
-  width:280px; height:280px; bottom:20%; right:8%;
-  background:radial-gradient(circle, rgba(255,214,10,.18), transparent 70%);
-  animation:gcDrift 20s ease-in-out infinite alternate-reverse;
-}
-@keyframes gcDrift { from{transform:translate(0,0);} to{transform:translate(40px,-40px);} }
+/* glow-c و glow-d محذوفان */
+@keyframes gcDrift { from{transform:translate(0,0);} to{transform:translate(30px,-30px);} }
 
 /* Floating icons */
 .fi {
@@ -379,9 +370,10 @@ textarea::placeholder { color:var(--dim); }
 /* ══════════ RESULTS ══════════ */
 .res-wrap {
   max-width:680px; margin:28px auto 0;
-  display:grid; grid-template-columns:1fr 1fr; gap:2px;
-  opacity:0; transform:translateY(24px);
-  transition:opacity .5s, transform .5s;
+  display:none; /* لا يحجز مساحة قبل النتائج */
+  grid-template-columns:1fr 1fr; gap:2px;
+  opacity:0; transform:translateY(20px);
+  transition:opacity .45s, transform .45s;
 }
 .res-wrap.on { opacity:1; transform:translateY(0); }
 .ri {
@@ -649,21 +641,19 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 .reanalyze-wrap.on { display:flex; }
 .reanalyze-btn {
   height:44px; padding:0 28px;
-  background:transparent; color:var(--purp-l);
-  border:2px solid rgba(167,139,250,.3);
+  background:transparent; color:var(--ash);
+  border:2px solid var(--bd2);
   font-family:'Almarai',sans-serif; font-size:.85rem; font-weight:700;
   cursor:pointer; letter-spacing:.03em;
   transition:all .2s; gap:8px;
   display:flex; align-items:center;
 }
 .reanalyze-btn:hover {
-  border-color:var(--purp-l);
-  background:rgba(124,58,237,.1);
-  color:var(--white);
+  border-color:var(--text);
+  color:var(--text);
+  background:rgba(0,0,0,.04);
 }
-.reanalyze-btn:disabled {
-  opacity:.4; cursor:not-allowed;
-}
+.reanalyze-btn:disabled { opacity:.4; cursor:not-allowed; }
 
 /* ══════════ SCROLL REVEAL ══════════ */
 .rv {
@@ -725,12 +715,10 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 <section class="hero" id="top">
   <div class="hero-glow glow-a" id="ga"></div>
   <div class="hero-glow glow-b" id="gb2"></div>
-  <div class="hero-glow glow-c"></div>
-  <div class="hero-glow glow-d"></div>
 
-  <div class="fi fi1" data-d="2">⚡</div>
-  <div class="fi fi2" data-d="1.5">🔥</div>
-  <div class="fi fi3" data-d="1.2">👆</div>
+  <div class="fi fi1" data-d="1.8">⚡</div>
+  <div class="fi fi2" data-d="1.2">🔥</div>
+  <div class="fi fi3" data-d="1">👆</div>
 
   <h1 class="hero-h">
     <span class="line1">حوّل <span class="pill pill-lavend">منشورك</span></span>
@@ -1058,20 +1046,25 @@ if (cur) {
 }
 
 /* ══════════════════════════════
-   MOUSE PARALLAX
+   MOUSE PARALLAX — مع rAF throttle
 ══════════════════════════════ */
+let _mx = 0, _my = 0, _rafPending = false;
 document.addEventListener('mousemove', e => {
-  const mx = (e.clientX / window.innerWidth  - 0.5);
-  const my = (e.clientY / window.innerHeight - 0.5);
-
-  const ga = $('ga'), gb = $('gb2');
-  if (ga) ga.style.transform = `translate(${mx*30}px,${my*30}px)`;
-  if (gb) gb.style.transform = `translate(${-mx*20}px,${-my*20}px)`;
-
-  document.querySelectorAll('.fi').forEach(fi => {
-    const d = parseFloat(fi.dataset.d) || 1;
-    fi.style.transform = `translate(${mx*d*25}px,${my*d*25}px)`;
-  });
+  _mx = (e.clientX / window.innerWidth  - 0.5);
+  _my = (e.clientY / window.innerHeight - 0.5);
+  if (!_rafPending) {
+    _rafPending = true;
+    requestAnimationFrame(() => {
+      const ga = $('ga'), gb = $('gb2');
+      if (ga) ga.style.transform = `translate(${_mx*25}px,${_my*25}px)`;
+      if (gb) gb.style.transform = `translate(${-_mx*18}px,${-_my*18}px)`;
+      document.querySelectorAll('.fi').forEach(fi => {
+        const d = parseFloat(fi.dataset.d) || 1;
+        fi.style.transform = `translate(${_mx*d*20}px,${_my*d*20}px)`;
+      });
+      _rafPending = false;
+    });
+  }
 });
 
 /* ══════════════════════════════
@@ -1122,7 +1115,10 @@ async function analyze() {
   if (used >= FREE) { $('pw').classList.add('on'); return; }
 
   setLoad(true);
-  $('res').classList.remove('on');
+  const resEl = $('res');
+  resEl.classList.remove('on');
+  resEl.style.display = 'none';
+  $('reWrap').classList.remove('on');
   ['rSc','rW','rRW','rHT'].forEach(id => {
     const el = $(id); if (el) el.classList.remove('in');
   });
@@ -1199,7 +1195,11 @@ function render(d) {
     tc.appendChild(t);
   });
 
-  $('res').classList.add('on');
+  const re = $('res');
+  re.style.display = 'grid';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    re.classList.add('on');
+  }));
   $('reWrap').classList.add('on');
   ['rSc','rW','rRW','rHT'].forEach((id, i) => {
     setTimeout(() => {
@@ -1262,8 +1262,9 @@ async function reanalyze() {
     ['rSc','rW','rRW','rHT'].forEach(id => {
       const el = $(id); if (el) el.classList.remove('in');
     });
-    $('res').classList.remove('on');
-    setTimeout(() => render(d), 100);
+    const reEl = $('res');
+    reEl.classList.remove('on');
+    setTimeout(() => { reEl.style.display = 'grid'; render(d); }, 80);
     toast('✨ تمت إعادة التحسين بنسخة مختلفة!');
   } catch {
     toast('❌ حدث خطأ، جرّب مرة ثانية');
