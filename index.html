@@ -12,24 +12,25 @@
    TOKENS
 ══════════════════════════════════════════ */
 :root {
-  --bg:     #080808;
-  --s1:     #101010;
-  --s2:     #181818;
-  --s3:     #222;
+  --bg:     #0B0718;
+  --s1:     #120F22;
+  --s2:     #1A1730;
+  --s3:     #24203E;
   --lime:   #C8FF00;
   --lime-d: #A8D800;
-  --lime-bg:rgba(200,255,0,.06);
+  --lime-bg:rgba(200,255,0,.07);
   --purp:   #7C3AED;
+  --purp-l: #A78BFA;
   --pink:   #FF2D78;
   --gold:   #FFD60A;
-  --cream:  #EDE8DF;
+  --cream:  #EEE9FF;
   --white:  #FAFAFA;
-  --ash:    #6B6B6B;
-  --dim:    #2E2E2E;
+  --ash:    #7A7498;
+  --dim:    #332E50;
   --ok:     #00E87A;
   --err:    #FF4444;
-  --bd:     rgba(255,255,255,.07);
-  --bd2:    rgba(255,255,255,.12);
+  --bd:     rgba(255,255,255,.08);
+  --bd2:    rgba(255,255,255,.15);
 }
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
@@ -119,17 +120,24 @@ nav {
   will-change:transform; transition:transform .2s ease-out;
 }
 .glow-a {
-  width:500px; height:500px; top:-100px; right:-80px;
-  background:radial-gradient(circle, rgba(200,255,0,.12), transparent 70%);
+  width:600px; height:600px; top:-120px; right:-100px;
+  background:radial-gradient(circle, rgba(200,255,0,.18), transparent 70%);
 }
 .glow-b {
-  width:400px; height:400px; bottom:0; left:-60px;
-  background:radial-gradient(circle, rgba(124,58,237,.15), transparent 70%);
+  width:500px; height:500px; bottom:-60px; left:-80px;
+  background:radial-gradient(circle, rgba(124,58,237,.28), transparent 70%);
 }
 .glow-c {
-  width:350px; height:350px; top:40%; left:40%;
-  background:radial-gradient(circle, rgba(255,45,120,.08), transparent 70%);
+  width:400px; height:400px; top:35%; left:38%;
+  background:radial-gradient(circle, rgba(255,45,120,.14), transparent 70%);
   animation:gcDrift 14s ease-in-out infinite alternate;
+}
+.glow-d {
+  position:absolute; pointer-events:none; z-index:0;
+  border-radius:50%; filter:blur(80px);
+  width:300px; height:300px; bottom:15%; right:5%;
+  background:radial-gradient(circle, rgba(255,214,10,.1), transparent 70%);
+  animation:gcDrift 18s ease-in-out infinite alternate-reverse;
 }
 @keyframes gcDrift { from{transform:translate(0,0);} to{transform:translate(40px,-40px);} }
 
@@ -168,18 +176,22 @@ nav {
 .hero-h {
   position:relative; z-index:2;
   font-family:'Almarai',sans-serif;
-  font-size:clamp(3.4rem,8.5vw,7.5rem);
+  font-size:clamp(3.2rem,8vw,7rem);
   font-weight:800;
-  line-height:1.06; letter-spacing:-.05em;
-  color:var(--cream); margin-bottom:22px;
+  line-height:1.22; letter-spacing:-.05em;
+  color:var(--cream); margin-bottom:24px;
+}
+.hero-h .line1 {
+  display:block; margin-bottom:10px;
 }
 .hero-h .lime-mark {
-  display:inline;
+  display:inline-block;
   background:var(--lime);
-  color:#080808;
-  padding:4px 14px 6px;
+  color:#0B0718;
+  padding:4px 18px 8px;
   box-shadow:5px 5px 0 var(--lime-d);
   position:relative; z-index:1;
+  line-height:1.3;
 }
 
 /* Hero sub */
@@ -595,6 +607,31 @@ footer p { font-size:.72rem; color:var(--dim); }
 }
 #toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
 
+/* ══════════ REANALYZE BUTTON ══════════ */
+.reanalyze-wrap {
+  max-width:680px; margin:14px auto 0;
+  display:none;
+  justify-content:center;
+}
+.reanalyze-wrap.on { display:flex; }
+.reanalyze-btn {
+  height:44px; padding:0 28px;
+  background:transparent; color:var(--purp-l);
+  border:2px solid rgba(167,139,250,.3);
+  font-family:'Almarai',sans-serif; font-size:.85rem; font-weight:700;
+  cursor:pointer; letter-spacing:.03em;
+  transition:all .2s; gap:8px;
+  display:flex; align-items:center;
+}
+.reanalyze-btn:hover {
+  border-color:var(--purp-l);
+  background:rgba(124,58,237,.1);
+  color:var(--white);
+}
+.reanalyze-btn:disabled {
+  opacity:.4; cursor:not-allowed;
+}
+
 /* ══════════ SCROLL REVEAL ══════════ */
 .rv {
   opacity:0; transform:translateY(32px);
@@ -656,18 +693,14 @@ footer p { font-size:.72rem; color:var(--dim); }
   <div class="hero-glow glow-a" id="ga"></div>
   <div class="hero-glow glow-b" id="gb2"></div>
   <div class="hero-glow glow-c"></div>
+  <div class="hero-glow glow-d"></div>
 
   <div class="fi fi1" data-d="2">⚡</div>
   <div class="fi fi2" data-d="1.5">🔥</div>
   <div class="fi fi3" data-d="1.2">👆</div>
 
-  <div class="hero-kicker">
-    <span class="kicker-dot"></span>
-    ذكاء اصطناعي للمحتوى الخليجي
-  </div>
-
   <h1 class="hero-h">
-    حوّل منشورك<br/>
+    <span class="line1">حوّل منشورك</span>
     <span class="lime-mark">من عادي لـ فايرل</span>
   </h1>
 
@@ -815,7 +848,15 @@ footer p { font-size:.72rem; color:var(--dim); }
       <div class="tags" id="tc"></div>
     </div>
 
+  </div><!-- /res-wrap -->
+
+  <!-- زر إعادة التحسين -->
+  <div class="reanalyze-wrap" id="reWrap">
+    <button class="reanalyze-btn" id="reBtn" onclick="reanalyze()">
+      🔄 أعد التحسين بنسخة مختلفة
+    </button>
   </div>
+
 </section>
 
 <!-- ══════════ HOW IT WORKS ══════════ -->
@@ -1114,18 +1155,19 @@ function render(d) {
     const t = document.createElement('span');
     t.className = 'htag'; t.textContent = h;
     t.onclick = () => {
-      const ta  = $('post');
-      const cur = ta.value.trimEnd();
-      ta.value  = (cur ? cur + '\n' : '') + h + ' ';
-      onType();
-      ta.focus();
-      ta.setSelectionRange(ta.value.length, ta.value.length);
-      toast('✅ تمت إضافة ' + h + ' للمنشور');
+      const box = $('rwb');
+      const cur = box.textContent.trimEnd();
+      box.textContent = (cur ? cur + '\n' : '') + h + ' ';
+      toast('✅ أُضيف ' + h + ' للمنشور المُحسَّن');
+      t.style.background = 'var(--lime)';
+      t.style.color      = '#0B0718';
+      t.style.borderColor= 'var(--lime)';
     };
     tc.appendChild(t);
   });
 
   $('res').classList.add('on');
+  $('reWrap').classList.add('on');
   ['rSc','rW','rRW','rHT'].forEach((id, i) => {
     setTimeout(() => {
       const el = $(id);
@@ -1160,6 +1202,42 @@ function setLoad(on) {
     _lt = setInterval(() => { i=(i+1)%MSGS.length; $('lt').textContent=MSGS[i]; }, 1400);
   } else {
     clearInterval(_lt);
+  }
+}
+
+/* ══════════════════════════════
+   REANALYZE (بدون خصم استخدام)
+══════════════════════════════ */
+async function reanalyze() {
+  const txt = $('post').value.trim();
+  if (!txt) { toast('⚠️ لا يوجد منشور للتحسين'); return; }
+
+  const btn = $('reBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ يُعيد التحسين...';
+
+  setLoad(true);
+  try {
+    const r = await fetch('/api/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text: txt, platform: plat, variation: Date.now() })
+    });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    // إعادة رسم النتائج بدون خصم الاستخدام
+    ['rSc','rW','rRW','rHT'].forEach(id => {
+      const el = $(id); if (el) el.classList.remove('in');
+    });
+    $('res').classList.remove('on');
+    setTimeout(() => render(d), 100);
+    toast('✨ تمت إعادة التحسين بنسخة مختلفة!');
+  } catch {
+    toast('❌ حدث خطأ، جرّب مرة ثانية');
+  } finally {
+    setLoad(false);
+    btn.disabled = false;
+    btn.textContent = '🔄 أعد التحسين بنسخة مختلفة';
   }
 }
 
