@@ -86,7 +86,7 @@ async function runGeminiReview(text, platform, claudeResult) {
   if (!process.env.GEMINI_API_KEY) return claudeResult;
 
   try {
-    const model  = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model  = gemini.getGenerativeModel({ model: 'gemini-3.1-flash' });
     const prompt = `أنت محرر محتوى خليجي. راجع هذا التحليل وحسّنه إذا لزم.
 
 المنشور الأصلي: """${text}"""
