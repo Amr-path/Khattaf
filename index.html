@@ -96,6 +96,7 @@ nav{
   border-bottom:1px solid var(--bd);
 }
 .logo{
+  display:flex;align-items:center;gap:9px;
   font-family:'Cairo',sans-serif;
   font-size:1.5rem;font-weight:900;letter-spacing:-.5px;
   background:linear-gradient(135deg,var(--purp-l),var(--pink),var(--gold-l));
@@ -104,6 +105,7 @@ nav{
   background-size:200% 100%;
   animation:logoShift 5s ease-in-out infinite;
 }
+.falcon-svg{flex-shrink:0;filter:drop-shadow(0 0 8px rgba(167,139,250,.45));}
 @keyframes logoShift{
   0%,100%{background-position:0% 50%;}
   50%{background-position:100% 50%;}
@@ -298,6 +300,11 @@ nav{
 .ptab[data-p="x"]:hover,.ptab[data-p="x"].on{
   background:rgba(255,255,255,.05);
   color:var(--white);
+}
+/* LinkedIn tab */
+.ptab[data-p="linkedin"]:hover,.ptab[data-p="linkedin"].on{
+  background:rgba(0,119,181,.08);
+  color:#0A66C2;
 }
 
 .ptab.on::after{
@@ -574,6 +581,7 @@ footer{
   padding:52px 6%;border-top:1px solid var(--bd);
 }
 .f-logo{
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;
   font-family:'Cairo',sans-serif;
   font-size:2.4rem;font-weight:900;letter-spacing:-.5px;
   background:linear-gradient(135deg,var(--purp-l),var(--pink),var(--gold-l));
@@ -676,7 +684,22 @@ footer p{font-size:.8rem;color:var(--dim);line-height:1.9;}
 
 <!-- NAV -->
 <nav>
-  <div class="logo">خطّاف</div>
+  <div class="logo">
+    <svg class="falcon-svg" width="28" height="34" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fgn" x1="0" y1="0" x2="28" y2="34" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#A78BFA"/>
+          <stop offset=".5" stop-color="#EC4899"/>
+          <stop offset="1" stop-color="#FCD34D"/>
+        </linearGradient>
+      </defs>
+      <path d="M14 1C17.5 1 20.5 3.5 21 7C21.5 10.5 19.5 15 17 18L14 33L11 18C8.5 15 6.5 10.5 7 7C7.5 3.5 10.5 1 14 1Z" fill="url(#fgn)"/>
+      <path d="M11 9C8 7.5 4.5 6.5 1 7.5C3.5 7.5 7 9 10.5 11.5Z" fill="url(#fgn)" opacity=".75"/>
+      <path d="M17 9C20 7.5 23.5 6.5 27 7.5C24.5 7.5 21 9 17.5 11.5Z" fill="url(#fgn)" opacity=".75"/>
+      <ellipse cx="14" cy="4" rx="2.5" ry="2" fill="url(#fgn)" opacity=".6"/>
+    </svg>
+    خطّاف
+  </div>
   <div class="nav-r">
     <a class="nav-lnk" href="#how">كيف يعمل</a>
     <a class="nav-lnk" href="#pricing">الأسعار</a>
@@ -750,6 +773,12 @@ footer p{font-size:.8rem;color:var(--dim);line-height:1.9;}
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
         </svg>
         تويتر / X
+      </button>
+      <button class="ptab" data-p="linkedin" onclick="pickP(this)">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        لينكدإن
       </button>
     </div>
 
@@ -905,7 +934,22 @@ footer p{font-size:.8rem;color:var(--dim);line-height:1.9;}
 
 <!-- FOOTER -->
 <footer>
-  <div class="f-logo">خطّاف</div>
+  <div class="f-logo">
+    <svg class="falcon-svg" width="36" height="44" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fgf" x1="0" y1="0" x2="28" y2="34" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#A78BFA"/>
+          <stop offset=".5" stop-color="#EC4899"/>
+          <stop offset="1" stop-color="#FCD34D"/>
+        </linearGradient>
+      </defs>
+      <path d="M14 1C17.5 1 20.5 3.5 21 7C21.5 10.5 19.5 15 17 18L14 33L11 18C8.5 15 6.5 10.5 7 7C7.5 3.5 10.5 1 14 1Z" fill="url(#fgf)"/>
+      <path d="M11 9C8 7.5 4.5 6.5 1 7.5C3.5 7.5 7 9 10.5 11.5Z" fill="url(#fgf)" opacity=".75"/>
+      <path d="M17 9C20 7.5 23.5 6.5 27 7.5C24.5 7.5 21 9 17.5 11.5Z" fill="url(#fgf)" opacity=".75"/>
+      <ellipse cx="14" cy="4" rx="2.5" ry="2" fill="url(#fgf)" opacity=".6"/>
+    </svg>
+    خطّاف
+  </div>
   <p>خلّ منشورك يشتغل 🚀</p>
   <p style="margin-top:6px;font-size:.75rem;">جميع الحقوق محفوظة © 2025 خطّاف</p>
 </footer>
@@ -1011,7 +1055,15 @@ function render(d){
   (d.hashtags||[]).forEach(h=>{
     const t=document.createElement('span');
     t.className='htag';t.textContent=h;
-    t.onclick=()=>{navigator.clipboard.writeText(h);toast('✅ تم نسخ '+h);};
+    t.onclick=()=>{
+      const ta=$('post');
+      const cur=ta.value.trimEnd();
+      ta.value=(cur?cur+'\n':'')+h+' ';
+      onType();
+      ta.focus();
+      ta.setSelectionRange(ta.value.length,ta.value.length);
+      toast('✅ تمت إضافة '+h+' للمنشور');
+    };
     tc.appendChild(t);
   });
 

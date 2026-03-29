@@ -29,7 +29,8 @@ app.use(express.static(path.join(__dirname)));
 const HINTS = {
   instagram: 'إنستقرام: كابشن مثالي بين ١٥٠–٣٠٠ حرف، هوك قوي في أول سطر، إيموجي مناسبة، CTA واضح.',
   tiktok:    'تيك توك: نص قصير وصارخ، الجملة الأولى تحسم كل شيء في ثانيتين، لغة شبابية ومباشرة.',
-  x:         'تويتر/X: أقل من ٢٨٠ حرف، مباشر وجريء، يثير فضول أو ردة فعل فورية.'
+  x:         'تويتر/X: أقل من ٢٨٠ حرف، مباشر وجريء، يثير فضول أو ردة فعل فورية.',
+  linkedin:  'لينكدإن: محتوى احترافي وملهم، قصة شخصية أو إنجاز أو درس تعلمته، أسلوب دافئ وإنساني، CTA يدعو للتعليق أو المشاركة، لا تزيد عن ٣٠٠ كلمة.'
 };
 
 // ══════════════════════════════════════════════════════════
@@ -86,7 +87,7 @@ async function runGeminiReview(text, platform, claudeResult) {
   if (!process.env.GEMINI_API_KEY) return claudeResult;
 
   try {
-    const model  = gemini.getGenerativeModel({ model: 'gemini-3.1-flash' });
+    const model  = gemini.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
     const prompt = `أنت محرر محتوى خليجي. راجع هذا التحليل وحسّنه إذا لزم.
 
 المنشور الأصلي: """${text}"""
