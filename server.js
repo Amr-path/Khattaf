@@ -33,13 +33,10 @@ const HINTS = {
 };
 
 // ══════════════════════════════════════════════════════════
-//  STEP 1 — Gemini analyzes the post
+//  الـ PROMPT المشترك
 // ══════════════════════════════════════════════════════════
-async function runGemini(text, platform) {
-  const model = gemini.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const prompt = `
-أنت خبير محتوى رقمي خليجي متخصص في السوشيال ميديا السعودية والخليجية.
+function buildPrompt(text, platform) {
+  return `أنت خبير محتوى رقمي خليجي متخصص في السوشيال ميديا السعودية والخليجية.
 مهمتك تحليل المنشور التالي وتحسينه لتحقيق أكبر انتشار وتفاعل.
 
 المنصة: ${platform}
@@ -56,71 +53,60 @@ async function runGemini(text, platform) {
 ${text}
 """
 
-أرجع ردّك كـ JSON فقط بهذا الشكل بالضبط (لا تضف أي نص خارج الـ JSON):
+أرجع ردّك كـ JSON فقط بهذا الشكل (لا تضف أي نص خارج الـ JSON):
 {
   "score": رقم من 1 إلى 10,
   "verdict": "جملة واحدة تلخّص تقييمك للمنشور",
-  "analysis": "فقرة تحليل مفصّلة من 2-3 جمل تشرح نقاط الضعف والقوة",
-  "weaknesses": ["نقطة ضعف محددة وقابلة للتطبيق", "نقطة ضعف ثانية", "نقطة ضعف ثالثة"],
+  "analysis": "فقرة تحليل مفصّلة 2-3 جمل",
+  "weaknesses": ["نقطة ضعف محددة", "نقطة ضعف ثانية", "نقطة ضعف ثالثة"],
   "rewrite": "نص المنشور المُحسَّن كاملاً بالخليجي",
   "hashtags": ["#هاشتاق١", "#هاشتاق٢", "#هاشتاق٣", "#هاشتاق٤", "#هاشتاق٥", "#هاشتاق٦"]
 }`;
+}
 
-  const result = await model.generateContent(prompt);
-  const raw    = result.response.text().trim();
-  const match  = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Gemini: invalid JSON');
+// ══════════════════════════════════════════════════════════
+//  STEP 1 — Claude يحلّل (الأساسي)
+// ══════════════════════════════════════════════════════════
+async function runClaude(text, platform) {
+  const msg = await anthropic.messages.create({
+    model:      'claude-sonnet-4-6',
+    max_tokens: 1500,
+    messages:   [{ role: 'user', content: buildPrompt(text, platform) }]
+  });
+  const raw   = msg.content[0].text.trim();
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Claude: invalid JSON');
   return JSON.parse(match[0]);
 }
 
 // ══════════════════════════════════════════════════════════
-//  STEP 2 — Claude reviews & elevates Gemini's output
-//  (only runs if ANTHROPIC_API_KEY is set)
+//  STEP 2 — Gemini يراجع ويحسّن (احتياطي/مُعزِّز)
 // ══════════════════════════════════════════════════════════
-async function runClaudeReview(originalText, platform, geminiResult) {
-  if (!anthropic) return geminiResult; // skip if no Claude key
+async function runGeminiReview(text, platform, claudeResult) {
+  if (!process.env.GEMINI_API_KEY) return claudeResult;
 
-  const systemPrompt = `أنت محرر محتوى رقمي خليجي خبير. مهمتك مراجعة تحليل AI آخر لمنشور على السوشيال ميديا وتحسينه.
-اكتب دائماً بالعربي الخليجي السعودي الطبيعي.
-أرجع JSON فقط بنفس الشكل الذي استلمته.`;
+  try {
+    const model  = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const prompt = `أنت محرر محتوى خليجي. راجع هذا التحليل وحسّنه إذا لزم.
 
-  const userPrompt = `
-المنشور الأصلي:
-"""${originalText}"""
-
+المنشور الأصلي: """${text}"""
 المنصة: ${platform}
 
-تحليل Gemini:
-${JSON.stringify(geminiResult, null, 2)}
+التحليل الحالي:
+${JSON.stringify(claudeResult, null, 2)}
 
-مهمتك:
-1. راجع التقييم (score) — هل هو دقيق؟ عدّله إذا لزم
-2. حسّن نقاط الضعف — اجعلها أكثر تحديداً وقابلية للتطبيق
-3. أعد كتابة النسخة المحسّنة إذا كانت تحتاج تطوير
-4. تأكد من أن الهاشتاقات خليجية وفعّالة
-5. اجعل الـ verdict أكثر صدقاً وصرامة
+أرجع JSON بنفس الشكل بالضبط مع أي تحسينات تراها مناسبة.`;
 
-أرجع JSON بنفس الشكل بالضبط:
-{
-  "score": رقم,
-  "verdict": "...",
-  "analysis": "...",
-  "weaknesses": ["...","...","..."],
-  "rewrite": "...",
-  "hashtags": ["#...","#...","#...","#...","#...","#..."]
-}`;
-
-  const msg = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
-    max_tokens: 1500,
-    system:     systemPrompt,
-    messages:   [{ role: 'user', content: userPrompt }]
-  });
-
-  const raw   = msg.content[0].text.trim();
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) return geminiResult; // fallback to Gemini result
-  return JSON.parse(match[0]);
+    const result = await model.generateContent(prompt);
+    const raw    = result.response.text().trim();
+    const match  = raw.match(/\{[\s\S]*\}/);
+    if (!match) return claudeResult;
+    return JSON.parse(match[0]);
+  } catch (err) {
+    // إذا Gemini واجه مشكلة، نرجع نتيجة Claude مباشرة
+    console.warn('⚠️ Gemini review skipped:', err.message.slice(0, 80));
+    return claudeResult;
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -133,17 +119,18 @@ app.post('/api/analyze', async (req, res) => {
     return res.status(400).json({ error: 'المنشور فارغ أو قصير جداً' });
   }
 
-  try {
-    // Round 1: Gemini analyzes
-    console.log('🟡 Gemini analyzing...');
-    const geminiResult = await runGemini(text.trim(), platform || 'instagram');
+  if (!anthropic) {
+    return res.status(503).json({ error: 'ANTHROPIC_API_KEY غير موجود في الإعدادات' });
+  }
 
-    // Round 2: Claude reviews & elevates (if key exists)
-    let finalResult = geminiResult;
-    if (anthropic) {
-      console.log('🟣 Claude reviewing Gemini output...');
-      finalResult = await runClaudeReview(text.trim(), platform || 'instagram', geminiResult);
-    }
+  try {
+    // Round 1: Claude يحلّل
+    console.log('🟣 Claude analyzing...');
+    const claudeResult = await runClaude(text.trim(), platform || 'instagram');
+
+    // Round 2: Gemini يراجع (اختياري - يتجاوز الأخطاء تلقائياً)
+    console.log('🟡 Gemini reviewing...');
+    const finalResult = await runGeminiReview(text.trim(), platform || 'instagram', claudeResult);
 
     console.log('✅ Final score:', finalResult.score);
     res.json(finalResult);
