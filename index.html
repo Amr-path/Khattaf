@@ -78,6 +78,49 @@ body::after {
 .cursor.grow { width:44px; height:44px; background:var(--lime); border-radius:50%; }
 @media(max-width:768px){ .cursor{display:none;} body{cursor:auto;} }
 
+/* ══════════ إخفاء المؤشر داخل نافذة Clerk ══════════ */
+[class*="cl-"],
+[class*="cl-"] *,
+[data-clerk-portal],
+[data-clerk-portal] * {
+  cursor: none !important;
+}
+
+/* ══════════ إصلاح تخطيط Clerk مع RTL ══════════ */
+/* نافذة تسجيل الدخول — توسيط */
+.cl-modalContent,
+.cl-card {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* صفحة الحساب — إصلاح الـ sidebar المكسور */
+.cl-userProfile-root,
+.cl-profilePage,
+.cl-profileSection {
+  direction: rtl !important;
+}
+
+/* navbar الجانبي — من اليمين */
+.cl-navbar {
+  direction: rtl !important;
+  border-left: none !important;
+  border-right: 2px solid rgba(0,0,0,.1) !important;
+  order: 1;
+}
+
+/* محتوى الصفحة */
+.cl-scrollBox {
+  direction: rtl !important;
+  order: 0;
+}
+
+/* إخفاء شعار Clerk */
+.cl-internal-b3fm6y,
+[class*="cl-powered"] {
+  display: none !important;
+}
+
 /* ══════════ NAV ══════════ */
 nav {
   position:fixed; top:0; z-index:200;
@@ -1125,6 +1168,60 @@ window.addEventListener('load', async () => {
         userButton: {
           action__signOut: 'تسجيل الخروج',
           action__manageAccount: 'إعدادات الحساب',
+        },
+        userProfile: {
+          navbar: {
+            title: 'الحساب',
+            description: 'إدارة معلومات حسابك',
+            account: 'الحساب',
+            security: 'الأمان',
+          },
+          start: {
+            headerTitle__account: 'معلومات الحساب',
+            headerTitle__security: 'الأمان',
+            profileSection: { title: 'الملف الشخصي', primaryButton: 'تعديل الملف' },
+            usernameSection: { title: 'اسم المستخدم', primaryButton: 'تعديل', destructiveAction: 'حذف اسم المستخدم' },
+            emailAddressesSection: {
+              title: 'البريد الإلكتروني',
+              primaryButton: '+ إضافة بريد',
+              detailsTitle__primary: 'البريد الأساسي',
+              detailsSubtitle__primary: 'يُستخدم لتسجيل الدخول والإشعارات',
+              detailsAction__primary: 'تعيين كأساسي',
+              destructiveAction: 'حذف البريد',
+            },
+            phoneNumbersSection: {
+              title: 'رقم الجوال',
+              primaryButton: '+ إضافة رقم',
+              destructiveAction: 'حذف الرقم',
+            },
+            connectedAccountsSection: {
+              title: 'الحسابات المرتبطة',
+              primaryButton: '+ ربط حساب',
+              destructiveActionTitle: 'فك الارتباط',
+              destructiveActionSubtitle: 'لن تتمكن من الدخول بهذا الحساب بعد فك الارتباط',
+            },
+            enterpriseAccountsSection: { title: 'حسابات المؤسسة' },
+            activeDevicesSection: {
+              title: 'الأجهزة النشطة',
+              primaryButton: 'إنهاء الجلسات الأخرى',
+              destructiveAction: 'تسجيل الخروج من هذا الجهاز',
+            },
+            mfaSection: {
+              title: 'المصادقة الثنائية',
+              primaryButton: '+ إضافة',
+              phoneCode: { destructiveActionTitle: 'إزالة' },
+              backupCodes: { headerTitle: 'رموز الاحتياط', title__regenerate: 'إعادة توليد الرموز' },
+            },
+            passwordSection: {
+              title: 'كلمة المرور',
+              primaryButton__setPassword: 'تعيين كلمة مرور',
+              primaryButton__changePassword: 'تغيير كلمة المرور',
+              destructiveAction: 'حذف كلمة المرور',
+            },
+          },
+          formButtonPrimary__continue: 'متابعة',
+          formButtonPrimary__finish: 'إنهاء',
+          formButtonReset: 'إلغاء',
         },
         footerActionLink__useAnotherMethod: 'استخدم طريقة أخرى',
         backButton: 'رجوع',
