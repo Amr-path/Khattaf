@@ -167,7 +167,6 @@ app.get('/api/checkout', async (req, res) => {
         card: { request_three_d_secure: 'automatic' }
       },
       line_items:                [{ price: priceId, quantity: 1 }],
-      customer_creation:         'always',
       billing_address_collection:'required',
       success_url: `${process.env.BASE_URL || 'http://localhost:' + PORT}/?success=true&plan=${plan}`,
       cancel_url:  `${process.env.BASE_URL || 'http://localhost:' + PORT}/?canceled=true`,
