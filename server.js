@@ -161,18 +161,26 @@ app.get('/api/checkout', async (req, res) => {
 
   try {
     const session = await stripe.checkout.sessions.create({
-      mode:                 'subscription',
-      payment_method_types: ['card'],
-      line_items:           [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.BASE_URL || 'http://localhost:' + PORT}/?success=true`,
+      mode:                      'subscription',
+      payment_method_types:      ['card'],
+      payment_method_options:    {
+        card: { request_three_d_secure: 'automatic' }
+      },
+      line_items:                [{ price: priceId, quantity: 1 }],
+      customer_creation:         'always',
+      billing_address_collection:'required',
+      success_url: `${process.env.BASE_URL || 'http://localhost:' + PORT}/?success=true&plan=${plan}`,
       cancel_url:  `${process.env.BASE_URL || 'http://localhost:' + PORT}/?canceled=true`,
-      locale:      'ar',
-      metadata:    { plan }
+      locale:      'auto',
+      metadata:    { plan },
+      custom_text: {
+        submit: { message: 'ستتمكن من استخدام خطّاف Pro فور اكتمال الدفع.' }
+      }
     });
     res.redirect(303, session.url);
   } catch (err) {
     console.error('Stripe error:', err.message);
-    res.status(500).send('خطأ في الدفع');
+    res.status(500).send(`خطأ في الدفع: ${err.message}`);
   }
 });
 
