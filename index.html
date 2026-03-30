@@ -7,6 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@700;900&display=swap" rel="stylesheet"/>
+<script>
+  // Clerk publishable key
+  window.__CLERK_KEY__ = 'pk_test_c3RpcnJlZC1idWNrLTkwLmNsZXJrLmFjY291bnRzLmRldiQ';
+</script>
+<script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_c3RpcnJlZC1idWNrLTkwLmNsZXJrLmFjY291bnRzLmRldiQ"
+  src="https://stirred-buck-90.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript">
+</script>
 <style>
 /* ══════════════════════════════════════════
    TOKENS
@@ -620,6 +628,37 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 .pw-btn.g { background:transparent; color:var(--ash); border-color:var(--bd2); }
 .pw-btn.g:hover { border-color:var(--text); color:var(--text); }
 
+/* ══════════ CLERK USER BADGE ══════════ */
+.user-badge {
+  display:flex; align-items:center; gap:8px;
+  padding:4px 12px 4px 6px;
+  border:2px solid var(--bd2);
+  background:var(--s2);
+  cursor:pointer;
+  font-size:.75rem; font-weight:700;
+  transition:all .14s;
+}
+.user-badge:hover { border-color:var(--text); }
+.user-badge img {
+  width:26px; height:26px;
+  border-radius:50%;
+  object-fit:cover;
+}
+.user-badge .pro-tag {
+  background:var(--lime); color:var(--text);
+  font-size:.62rem; font-weight:800;
+  padding:1px 7px;
+  margin-right:4px;
+}
+.sign-in-btn {
+  height:36px; padding:0 16px;
+  background:transparent; color:var(--text);
+  border:2px solid var(--bd2);
+  font-family:'Almarai',sans-serif; font-size:.78rem; font-weight:800;
+  cursor:pointer; transition:all .12s;
+}
+.sign-in-btn:hover { border-color:var(--text); background:var(--text); color:var(--bg); }
+
 /* ══════════ TOAST ══════════ */
 #toast {
   position:fixed; bottom:28px; left:50%;
@@ -707,7 +746,11 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
   <div class="nav-r">
     <a class="nav-lnk" href="#how">كيف يعمل</a>
     <a class="nav-lnk" href="#pricing">الأسعار</a>
-    <button class="nav-btn" onclick="go('tool')">⚡ جرّب مجاناً</button>
+    <!-- Clerk: يُظهر هذا الـ div حسب حالة تسجيل الدخول -->
+    <div id="clerk-nav" style="display:flex;align-items:center;gap:10px;">
+      <!-- قبل تحميل Clerk -->
+      <button class="nav-btn" onclick="go('tool')">⚡ جرّب مجاناً</button>
+    </div>
   </div>
 </nav>
 
@@ -1010,9 +1053,16 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 <div id="pw">
   <div class="pw-box">
     <span class="pw-icon">⚡</span>
-    <h2>خلصت الاستخدامات المجانية</h2>
-    <p>استخدمت الـ 3 تحليلات المجانية.<br/>اشترك في Pro وتحصل على تحليلات غير محدودة.</p>
-    <button class="pw-btn s" onclick="pay('monthly')">اشترك في Pro — 39 SAR / شهر</button>
+    <h2 id="pw-title">خلصت الاستخدامات المجانية</h2>
+    <p id="pw-msg">استخدمت الـ 3 تحليلات المجانية.<br/>سجّل دخولك أو اشترك في Pro للاستمرار.</p>
+    <!-- يظهر لو ما سجّل دخول -->
+    <button class="pw-btn s" id="pw-signin-btn" onclick="clerkSignIn()" style="display:none">
+      🔐 سجّل دخولك — مجاناً
+    </button>
+    <!-- يظهر لو سجّل دخول لكن ما اشترك -->
+    <button class="pw-btn s" id="pw-pay-btn" onclick="pay('monthly')">
+      ⚡ اشترك في Pro — 39 SAR / شهر
+    </button>
     <button class="pw-btn g" onclick="closePW()">مو الحين</button>
   </div>
 </div>
@@ -1027,8 +1077,82 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 const FREE = 3;
 let plat = 'instagram';
 let used = +(localStorage.getItem('kh_u') || 0);
+let _isPro = false;
+let _clerkReady = false;
 const $ = id => document.getElementById(id);
 syncL();
+
+/* ══════════════════════════════
+   CLERK INIT
+══════════════════════════════ */
+window.addEventListener('load', async () => {
+  if (!window.Clerk) return;
+  try {
+    await window.Clerk.load();
+    _clerkReady = true;
+    await refreshUserStatus();
+  } catch(e) {
+    console.warn('Clerk load failed:', e.message);
+  }
+});
+
+async function refreshUserStatus() {
+  try {
+    const res  = await fetch('/api/user-status');
+    const data = await res.json();
+    _isPro = data.pro === true;
+
+    const navEl = $('clerk-nav');
+    if (!navEl) return;
+
+    if (data.authenticated) {
+      const user = window.Clerk.user;
+      const img  = user?.imageUrl || '';
+      const name = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'أنت';
+      navEl.innerHTML = `
+        <button class="user-badge" onclick="window.Clerk.openUserProfile()">
+          ${img ? `<img src="${img}" alt="avatar"/>` : ''}
+          <span>${name}</span>
+          ${_isPro ? '<span class="pro-tag">PRO</span>' : ''}
+        </button>
+      `;
+      // لو صار Pro من Stripe، احفظ في localStorage كـ backup
+      if (_isPro) {
+        localStorage.setItem('kh_pro', '1');
+        used = 0;
+        localStorage.setItem('kh_u', '0');
+        syncL();
+      }
+    } else {
+      navEl.innerHTML = `
+        <button class="sign-in-btn" onclick="clerkSignIn()">تسجيل الدخول</button>
+        <button class="nav-btn" onclick="go('tool')">⚡ جرّب مجاناً</button>
+      `;
+    }
+  } catch(e) {
+    // Fallback لو فشل الطلب
+    console.warn('user-status fetch failed:', e.message);
+  }
+}
+
+function clerkSignIn() {
+  if (window.Clerk) {
+    window.Clerk.openSignIn({
+      afterSignInUrl: window.location.href,
+      afterSignUpUrl: window.location.href,
+    });
+  }
+}
+
+function clerkSignOut() {
+  if (window.Clerk) {
+    window.Clerk.signOut().then(() => {
+      _isPro = false;
+      localStorage.removeItem('kh_pro');
+      refreshUserStatus();
+    });
+  }
+}
 
 /* ══════════════════════════════
    CURSOR
@@ -1112,7 +1236,12 @@ async function analyze() {
   const txt = $('post').value.trim();
   if (!txt)        { toast('⚠️ الصق منشورك أول'); return; }
   if (txt.length < 10) { toast('⚠️ المنشور قصير جداً'); return; }
-  if (used >= FREE) { $('pw').classList.add('on'); return; }
+  // Pro users (Clerk) — لا حد للاستخدام
+  const localPro = localStorage.getItem('kh_pro') === '1';
+  if (!_isPro && !localPro && used >= FREE) {
+    openPaywall();
+    return;
+  }
 
   setLoad(true);
   const resEl = $('res');
@@ -1278,8 +1407,119 @@ async function reanalyze() {
 /* ══════════════════════════════
    PAYWALL & PAY
 ══════════════════════════════ */
+function openPaywall() {
+  const isSignedIn = _clerkReady && window.Clerk?.user;
+  const signInBtn  = $('pw-signin-btn');
+  const payBtn     = $('pw-pay-btn');
+  const msg        = $('pw-msg');
+
+  if (isSignedIn) {
+    // مسجّل دخول لكن ما اشترك — اعرض زر الدفع فقط
+    if (signInBtn) signInBtn.style.display = 'none';
+    if (payBtn)    payBtn.style.display    = 'block';
+    if (msg) msg.innerHTML = 'استخدمت الـ 3 تحليلات المجانية.<br/>اشترك في Pro وتحصل على تحليلات غير محدودة.';
+  } else {
+    // ما سجّل دخول — اعرض زر تسجيل الدخول أولاً
+    if (signInBtn) signInBtn.style.display = 'block';
+    if (payBtn)    payBtn.style.display    = 'none';
+    if (msg) msg.innerHTML = 'استخدمت الـ 3 تحليلات المجانية.<br/>سجّل دخولك أولاً، ثم اشترك في Pro للاستمرار.';
+  }
+  $('pw').classList.add('on');
+}
+
 function closePW() { $('pw').classList.remove('on'); }
 function pay(p)    { window.location.href = '/api/checkout?plan=' + p; }
+
+/* ══════════════════════════════
+   STRIPE RETURN — success / cancel
+══════════════════════════════ */
+(function checkStripeReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'true') {
+    const plan = params.get('plan') === 'annual' ? 'السنوية' : 'الشهرية';
+    // Mark user as pro in localStorage
+    localStorage.setItem('kh_pro', '1');
+    used = 0;
+    localStorage.setItem('kh_u', '0');
+    syncL();
+    // Clean URL
+    history.replaceState({}, '', '/');
+    // Show success banner
+    showBanner(
+      '🎉 مرحباً بك في خطّاف Pro!',
+      `تم تفعيل باقتك ${plan} بنجاح. استمتع باستخدام غير محدود!`,
+      'success'
+    );
+  } else if (params.get('canceled') === 'true') {
+    history.replaceState({}, '', '/');
+    showBanner(
+      '😕 تم إلغاء الدفع',
+      'ما اكتمل الاشتراك. لو واجهت مشكلة تقدر تحاول مرة ثانية.',
+      'error'
+    );
+  }
+})();
+
+function showBanner(title, msg, type) {
+  // Remove any existing banner
+  const old = document.getElementById('stripe-banner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'stripe-banner';
+  banner.innerHTML = `
+    <div class="sb-icon">${type === 'success' ? '✅' : '⚠️'}</div>
+    <div class="sb-body">
+      <strong>${title}</strong>
+      <span>${msg}</span>
+    </div>
+    <button class="sb-close" onclick="this.parentElement.remove()">✕</button>
+  `;
+  banner.style.cssText = `
+    position:fixed; bottom:32px; right:50%; transform:translateX(50%);
+    z-index:9000; display:flex; align-items:center; gap:14px;
+    background:${type === 'success' ? '#C8FF00' : '#FF2D78'};
+    color:#100E0A;
+    border:2.5px solid #100E0A;
+    border-radius:16px;
+    padding:16px 22px;
+    box-shadow:6px 6px 0 #100E0A;
+    font-family:'Almarai',sans-serif;
+    font-size:15px;
+    max-width:480px;
+    width:90%;
+    direction:rtl;
+    animation:slideUp .4s cubic-bezier(.22,1,.36,1) both;
+  `;
+  document.body.appendChild(banner);
+
+  // Add animation keyframe if not present
+  if (!document.getElementById('sb-style')) {
+    const s = document.createElement('style');
+    s.id = 'sb-style';
+    s.textContent = `
+      @keyframes slideUp {
+        from { opacity:0; transform:translateX(50%) translateY(30px); }
+        to   { opacity:1; transform:translateX(50%) translateY(0); }
+      }
+      #stripe-banner .sb-body { display:flex; flex-direction:column; gap:4px; flex:1; }
+      #stripe-banner .sb-body strong { font-size:16px; font-weight:800; }
+      #stripe-banner .sb-body span   { font-size:13px; opacity:.85; }
+      #stripe-banner .sb-close {
+        background:transparent; border:none; cursor:pointer;
+        font-size:18px; padding:0 4px; color:#100E0A; font-weight:700;
+        flex-shrink:0; align-self:flex-start;
+      }
+      #stripe-banner .sb-icon { font-size:26px; flex-shrink:0; }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Auto-dismiss after 8s for success
+  if (type === 'success') {
+    setTimeout(() => banner.remove(), 8000);
+  }
+}
 </script>
 </body>
 </html>

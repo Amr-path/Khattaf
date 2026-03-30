@@ -3,6 +3,7 @@ const express  = require('express');
 const cors     = require('cors');
 const path     = require('path');
 const Stripe   = require('stripe');
+const { clerkMiddleware, getAuth, clerkClient } = require('@clerk/express');
 
 // ── AI clients ──────────────────────────────────────────
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -22,8 +23,13 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+// Webhook يحتاج raw body — يجب أن يكون قبل express.json()
+app.use('/api/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// Clerk middleware — يضيف auth لكل الطلبات (لا يمنع الوصول، فقط يقرأ التوكن)
+app.use(clerkMiddleware());
 
 // ── Platform hints ───────────────────────────────────────
 const HINTS = {
@@ -34,7 +40,7 @@ const HINTS = {
 };
 
 // ══════════════════════════════════════════════════════════
-//  الـ PROMPT المشترك
+//  PROMPT builder
 // ══════════════════════════════════════════════════════════
 function buildPrompt(text, platform) {
   return `أنت خبير محتوى رقمي خليجي متخصص في السوشيال ميديا السعودية والخليجية.
@@ -66,7 +72,7 @@ ${text}
 }
 
 // ══════════════════════════════════════════════════════════
-//  STEP 1 — Claude يحلّل (الأساسي)
+//  STEP 1 — Claude يحلّل
 // ══════════════════════════════════════════════════════════
 async function runClaude(text, platform) {
   const msg = await anthropic.messages.create({
@@ -81,13 +87,12 @@ async function runClaude(text, platform) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  STEP 2 — Gemini يراجع ويحسّن (احتياطي/مُعزِّز)
+//  STEP 2 — Gemini يراجع (اختياري)
 // ══════════════════════════════════════════════════════════
 async function runGeminiReview(text, platform, claudeResult) {
   if (!process.env.GEMINI_API_KEY) return claudeResult;
-
   try {
-    const model  = gemini.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+    const model  = gemini.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const prompt = `أنت محرر محتوى خليجي. راجع هذا التحليل وحسّنه إذا لزم.
 
 المنشور الأصلي: """${text}"""
@@ -104,11 +109,29 @@ ${JSON.stringify(claudeResult, null, 2)}
     if (!match) return claudeResult;
     return JSON.parse(match[0]);
   } catch (err) {
-    // إذا Gemini واجه مشكلة، نرجع نتيجة Claude مباشرة
     console.warn('⚠️ Gemini review skipped:', err.message.slice(0, 80));
     return claudeResult;
   }
 }
+
+// ══════════════════════════════════════════════════════════
+//  GET /api/user-status — هل المستخدم Pro؟
+// ══════════════════════════════════════════════════════════
+app.get('/api/user-status', async (req, res) => {
+  try {
+    const { userId } = getAuth(req);
+    if (!userId) return res.json({ authenticated: false, pro: false });
+
+    const user = await clerkClient.users.getUser(userId);
+    const pro  = user.publicMetadata?.pro === true;
+    const plan = user.publicMetadata?.plan || null;
+
+    res.json({ authenticated: true, pro, plan, userId });
+  } catch (err) {
+    console.error('user-status error:', err.message);
+    res.json({ authenticated: false, pro: false });
+  }
+});
 
 // ══════════════════════════════════════════════════════════
 //  POST /api/analyze
@@ -119,23 +142,19 @@ app.post('/api/analyze', async (req, res) => {
   if (!text || text.trim().length < 5) {
     return res.status(400).json({ error: 'المنشور فارغ أو قصير جداً' });
   }
-
   if (!anthropic) {
     return res.status(503).json({ error: 'ANTHROPIC_API_KEY غير موجود في الإعدادات' });
   }
 
   try {
-    // Round 1: Claude يحلّل
     console.log('🟣 Claude analyzing...');
     const claudeResult = await runClaude(text.trim(), platform || 'instagram');
 
-    // Round 2: Gemini يراجع (اختياري - يتجاوز الأخطاء تلقائياً)
     console.log('🟡 Gemini reviewing...');
     const finalResult = await runGeminiReview(text.trim(), platform || 'instagram', claudeResult);
 
     console.log('✅ Final score:', finalResult.score);
     res.json(finalResult);
-
   } catch (err) {
     console.error('❌ Analysis error:', err.message);
     res.status(500).json({ error: 'حدث خطأ في التحليل، حاول مرة ثانية' });
@@ -143,7 +162,7 @@ app.post('/api/analyze', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
-//  GET /api/checkout
+//  GET /api/checkout — يمرر userId لـ Stripe
 // ══════════════════════════════════════════════════════════
 app.get('/api/checkout', async (req, res) => {
   if (!stripe) {
@@ -159,6 +178,9 @@ app.get('/api/checkout', async (req, res) => {
     return res.status(503).send(`Missing Stripe price ID for: ${plan}`);
   }
 
+  // نجيب userId من Clerk إذا كان المستخدم مسجّل دخول
+  const { userId } = getAuth(req);
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode:                      'subscription',
@@ -171,10 +193,9 @@ app.get('/api/checkout', async (req, res) => {
       success_url: `${process.env.BASE_URL || 'http://localhost:' + PORT}/?success=true&plan=${plan}`,
       cancel_url:  `${process.env.BASE_URL || 'http://localhost:' + PORT}/?canceled=true`,
       locale:      'auto',
-      metadata:    { plan },
-      custom_text: {
-        submit: { message: 'ستتمكن من استخدام خطّاف Pro فور اكتمال الدفع.' }
-      }
+      metadata:    { plan, clerkUserId: userId || '' },
+      // نحفظ clerkUserId حتى نربطه في الـ webhook
+      client_reference_id: userId || 'guest'
     });
     res.redirect(303, session.url);
   } catch (err) {
@@ -184,25 +205,56 @@ app.get('/api/checkout', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
-//  POST /api/webhook
+//  POST /api/webhook — بعد الدفع نفعّل Pro في Clerk
 // ══════════════════════════════════════════════════════════
-app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/webhook', async (req, res) => {
   if (!stripe) return res.status(503).send('Stripe not configured');
 
   let event;
   try {
     event = stripe.webhooks.constructEvent(
-      req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET
+      req.body,
+      req.headers['stripe-signature'],
+      process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
+    console.error('Webhook signature error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
-    const s = event.data.object;
-    console.log('✅ New Pro subscriber:', s.customer_email, '| Plan:', s.metadata?.plan);
-    // TODO: mark user as Pro in your database
+    const session     = event.data.object;
+    const clerkUserId = session.metadata?.clerkUserId || session.client_reference_id;
+    const plan        = session.metadata?.plan || 'monthly';
+
+    console.log('✅ Payment completed | Clerk user:', clerkUserId, '| Plan:', plan);
+
+    // نفعّل Pro في Clerk metadata
+    if (clerkUserId && clerkUserId !== 'guest') {
+      try {
+        await clerkClient.users.updateUserMetadata(clerkUserId, {
+          publicMetadata: {
+            pro:   true,
+            plan:  plan,
+            since: Date.now(),
+            stripeCustomer: session.customer
+          }
+        });
+        console.log('✅ Clerk user marked as Pro:', clerkUserId);
+      } catch (err) {
+        console.error('❌ Failed to update Clerk metadata:', err.message);
+      }
+    }
   }
+
+  if (event.type === 'customer.subscription.deleted') {
+    // لو ألغى الاشتراك — نلغي Pro
+    const subscription = event.data.object;
+    const customerId   = subscription.customer;
+    console.log('⚠️ Subscription cancelled for customer:', customerId);
+    // يمكن ربطه لاحقاً بـ userId عبر قاعدة بيانات
+  }
+
   res.json({ received: true });
 });
 
@@ -215,6 +267,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 خطّاف running on http://localhost:${PORT}`);
   if (!process.env.GEMINI_API_KEY)    console.warn('⚠️  GEMINI_API_KEY missing');
-  if (!process.env.ANTHROPIC_API_KEY) console.warn('ℹ️  ANTHROPIC_API_KEY not set (dual-model disabled)');
-  if (!process.env.STRIPE_SECRET_KEY) console.warn('ℹ️  STRIPE_SECRET_KEY not set (payments disabled)');
+  if (!process.env.ANTHROPIC_API_KEY) console.warn('⚠️  ANTHROPIC_API_KEY not set');
+  if (!process.env.STRIPE_SECRET_KEY) console.warn('⚠️  STRIPE_SECRET_KEY not set');
+  if (!process.env.CLERK_SECRET_KEY)  console.warn('⚠️  CLERK_SECRET_KEY not set');
 });
