@@ -1088,7 +1088,120 @@ syncL();
 window.addEventListener('load', async () => {
   if (!window.Clerk) return;
   try {
-    await window.Clerk.load();
+    await window.Clerk.load({
+      /* ── تعريب كامل لنافذة Clerk ── */
+      localization: {
+        locale: 'ar-SA',
+        socialButtonsBlockButton: 'المتابعة بـ {{provider|titleize}}',
+        dividerText: 'أو',
+        formFieldLabel__emailAddress: 'البريد الإلكتروني',
+        formFieldLabel__password: 'كلمة المرور',
+        formFieldLabel__firstName: 'الاسم الأول',
+        formFieldLabel__lastName: 'اسم العائلة',
+        formFieldInputPlaceholder__emailAddress: 'أدخل بريدك الإلكتروني',
+        formButtonPrimary: 'متابعة',
+        signIn: {
+          start: { title: 'تسجيل الدخول', subtitle: 'للمتابعة إلى خطّاف' },
+          password: { title: 'أدخل كلمة المرور', subtitle: '', actionLink: 'نسيت كلمة المرور؟' },
+          forgotPasswordAlternativeMethods: { title: 'استرجاع الحساب' },
+          alternativeMethods: { title: 'طرق أخرى للدخول', actionLink: 'استخدم طريقة أخرى' },
+        },
+        signUp: {
+          start: { title: 'أنشئ حسابك', subtitle: 'للمتابعة إلى خطّاف' },
+        },
+        userButton: {
+          action__signOut: 'تسجيل الخروج',
+          action__manageAccount: 'إعدادات الحساب',
+        },
+        footerActionLink__useAnotherMethod: 'استخدم طريقة أخرى',
+        backButton: 'رجوع',
+        badge__primary: 'أساسي',
+        formFieldAction__forgotPassword: 'نسيت كلمة المرور؟',
+        footerPageLink__signIn: 'تسجيل الدخول',
+        footerPageLink__signUp: 'إنشاء حساب',
+        signIn__alternativeMethods__blockButton__emailCode: 'إرسال رمز لـ {{identifier}}',
+        signIn__alternativeMethods__blockButton__emailLink: 'إرسال رابط لـ {{identifier}}',
+        signIn__alternativeMethods__blockButton__password: 'تسجيل الدخول بكلمة المرور',
+        verificationCodeInputPrompt: 'الرمز',
+        identityPreview__editText: 'تعديل',
+        formResendCodeLink: 'إعادة إرسال الرمز',
+        nextButton: 'التالي',
+        userVerification: {
+          formTitle: 'تحقق من هويتك',
+          formSubtitle: 'للمتابعة إلى خطّاف',
+        },
+      },
+
+      /* ── تصميم يتناسب مع هوية خطّاف ── */
+      appearance: {
+        layout: {
+          socialButtonsVariant: 'blockButton',
+          socialButtonsPlacement: 'top',
+          logoPlacement: 'none',
+          shimmer: false,
+        },
+        variables: {
+          colorPrimary:        '#100E0A',
+          colorBackground:     '#F7F5F0',
+          colorText:           '#100E0A',
+          colorTextSecondary:  '#6E6A62',
+          colorInputBackground:'#ECEAE4',
+          colorInputText:      '#100E0A',
+          colorNeutral:        '#100E0A',
+          borderRadius:        '0px',
+          fontFamily:          "'Almarai', sans-serif",
+          fontSize:            '15px',
+          spacingUnit:         '18px',
+        },
+        elements: {
+          card: {
+            boxShadow: '8px 8px 0 #100E0A',
+            border: '2px solid #100E0A',
+            borderRadius: '0',
+            padding: '32px',
+          },
+          headerTitle: {
+            fontSize: '1.3rem',
+            fontWeight: '800',
+            fontFamily: "'Cairo', sans-serif",
+          },
+          headerSubtitle: { color: '#6E6A62', fontSize: '.85rem' },
+          socialButtonsBlockButton: {
+            border: '2px solid #100E0A',
+            borderRadius: '0',
+            background: '#ECEAE4',
+            color: '#100E0A',
+            fontWeight: '700',
+            boxShadow: '3px 3px 0 #100E0A',
+            transition: 'all .12s',
+            '&:hover': { background: '#C8FF00', boxShadow: '3px 3px 0 #A8D800' },
+          },
+          formButtonPrimary: {
+            background: '#100E0A',
+            color: '#ECEAE4',
+            borderRadius: '0',
+            fontWeight: '800',
+            boxShadow: '3px 3px 0 rgba(0,0,0,.3)',
+            '&:hover': { background: '#C8FF00', color: '#100E0A' },
+          },
+          formFieldInput: {
+            border: '2px solid rgba(0,0,0,.15)',
+            borderRadius: '0',
+            background: '#ECEAE4',
+            '&:focus': { border: '2px solid #100E0A', boxShadow: 'none' },
+          },
+          dividerLine: { background: 'rgba(0,0,0,.12)' },
+          dividerText: { color: '#6E6A62', fontSize: '.8rem' },
+          footerAction: { fontSize: '.82rem' },
+          identityPreviewText: { fontWeight: '700' },
+          otpCodeFieldInput: {
+            border: '2px solid rgba(0,0,0,.15)',
+            borderRadius: '0',
+            background: '#ECEAE4',
+          },
+        },
+      },
+    });
     _clerkReady = true;
     await refreshUserStatus();
   } catch(e) {
