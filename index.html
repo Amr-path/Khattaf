@@ -88,52 +88,59 @@ body::after {
 
 /* ══════════ إصلاح تخطيط Clerk مع RTL ══════════ */
 
-/*
-  الحل الجذري: Clerk مصممة على LTR — نجبر كل عناصرها على LTR
-  ونحتفظ بالعربي فقط للنصوص عبر text-align:right
-*/
+/* الحل: نجبر كل Clerk على LTR حتى لا يكسر RTL الصفحة التخطيطَ الداخلي */
 [data-clerk-portal],
-[data-clerk-portal] *,
-.cl-rootBox,
-.cl-rootBox * {
+[data-clerk-portal] * {
   direction: ltr !important;
-  unicode-bidi: isolate !important;
+  box-sizing: border-box !important;
 }
 
-/* نعيد محاذاة النصوص العربية يمين */
+/* نعيد العربي للنصوص فقط */
 [data-clerk-portal] h1,
 [data-clerk-portal] h2,
 [data-clerk-portal] p,
 [data-clerk-portal] label,
-[data-clerk-portal] button,
-[data-clerk-portal] span,
-[data-clerk-portal] a {
-  text-align: right !important;
+[data-clerk-portal] a,
+[data-clerk-portal] span:not([class*="cl-badge"]) {
   unicode-bidi: plaintext !important;
+  text-align: right !important;
 }
 
-/* حجم مناسب للـ modal */
-.cl-modalContent {
-  width: min(720px, 92vw) !important;
-  max-width: 92vw !important;
-}
-
-/* الكارد في شاشة تسجيل الدخول */
+/* ── تسجيل الدخول ── */
 .cl-card {
-  width: min(460px, 90vw) !important;
+  width: clamp(340px, 480px, 92vw) !important;
 }
 
-/* navbar ثابت العرض */
+/* ── صفحة الحساب: modal واسع ── */
+.cl-modalContent {
+  width: clamp(560px, 760px, 95vw) !important;
+  max-width: 95vw !important;
+  overflow: hidden !important;
+}
+
+/* نص ونص — sidebar : content */
+.cl-userProfile-root {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  min-height: 520px !important;
+}
+
 .cl-navbar {
-  min-width: 176px !important;
-  width: 176px !important;
+  width: 42% !important;
+  min-width: 160px !important;
+  max-width: 220px !important;
   flex-shrink: 0 !important;
+  border-left: none !important;
+  border-right: 2px solid rgba(0,0,0,.08) !important;
+  overflow-y: auto !important;
 }
 
-/* محتوى الصفحة يأخذ باقي المساحة */
 .cl-scrollBox {
   flex: 1 1 auto !important;
   min-width: 0 !important;
+  overflow-x: hidden !important;
   overflow-y: auto !important;
 }
 
@@ -793,7 +800,7 @@ footer p { font-size:.72rem; color:rgba(255,255,255,.35); }
 <!-- ══════════ NAV ══════════ -->
 <nav>
   <div class="logo">
-    <svg class="falcon-svg" width="26" height="32" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="falcon-svg" width="32" height="40" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="fgn" x1="0" y1="0" x2="28" y2="34" gradientUnits="userSpaceOnUse">
           <stop stop-color="#5B21B6"/>
@@ -1378,6 +1385,27 @@ window.addEventListener('load', async () => {
             border: '2px solid',
           },
           alertText: { fontWeight: '700', fontSize: '.85rem' },
+
+          /* ── UserProfile layout ── */
+          userProfile__root: {
+            width: '100%',
+            minWidth: '0',
+          },
+          navbar: {
+            width: '50%',
+            minWidth: '160px',
+            maxWidth: '220px',
+            borderRight: '2px solid rgba(0,0,0,.1)',
+            flexShrink: '0',
+          },
+          scrollBox: {
+            flex: '1',
+            minWidth: '0',
+            overflowX: 'hidden',
+          },
+          pageScrollBox: {
+            padding: '24px 28px',
+          },
         },
       },
     });
