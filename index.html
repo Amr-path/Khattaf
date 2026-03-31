@@ -118,52 +118,101 @@ body::after {
   width: clamp(340px, 480px, 94vw) !important;
 }
 
-/* ── صفحة الحساب: مودال عريض جداً ── */
+/* ── صفحة الحساب ── */
 .cl-modalContent:has(.cl-userProfile-root) {
-  width: min(900px, 97vw) !important;
-  max-width: 97vw !important;
+  width: min(580px, 95vw) !important;
+  max-width: 95vw !important;
   padding: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 10px 10px 0 #100E0A !important;
+  border: 2.5px solid #100E0A !important;
+}
+
+/* إخفاء الـ navbar (القائمة الجانبية) بالكامل */
+.cl-navbar,
+.cl-navbarMobileMenuButton {
+  display: none !important;
 }
 
 .cl-userProfile-root {
-  display: flex !important;
-  flex-direction: row !important;
   width: 100% !important;
-  min-height: 560px !important;
-  overflow: hidden !important;
+  min-height: auto !important;
 }
 
-/* sidebar — 220px ثابت */
-.cl-navbar {
-  width: 220px !important;
-  min-width: 220px !important;
-  max-width: 220px !important;
-  flex-shrink: 0 !important;
-  border-right: 2px solid rgba(0,0,0,.08) !important;
-  border-left: none !important;
-  overflow-y: auto !important;
-  padding: 20px 0 !important;
-}
-
-/* content — يأخذ باقي الـ 680px */
+/* المحتوى يأخذ كامل العرض */
 .cl-scrollBox {
-  flex: 1 1 auto !important;
+  width: 100% !important;
   min-width: 0 !important;
-  max-width: 100% !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
+  max-height: 80vh !important;
+}
+
+/* تحسين padding المحتوى */
+.cl-pageScrollBox {
+  padding: 28px 32px !important;
+}
+
+/* عنوان القسم */
+.cl-headerTitle {
+  font-size: 1.4rem !important;
+  font-weight: 900 !important;
+  font-family: 'Cairo', sans-serif !important;
+  margin-bottom: 4px !important;
+}
+
+/* قسم الملف الشخصي */
+.cl-profileSectionTitle {
+  font-size: .82rem !important;
+  font-weight: 800 !important;
+  color: #6E6A62 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid rgba(0,0,0,.08) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 16px !important;
+}
+
+/* الصف داخل كل قسم */
+.cl-profileSectionItem {
+  border: 1.5px solid rgba(0,0,0,.1) !important;
+  padding: 12px 16px !important;
+  margin-bottom: 8px !important;
+  background: #ECEAE4 !important;
+}
+
+/* أزرار الإجراءات داخل الأقسام */
+.cl-profileSectionPrimaryButton,
+.cl-profileSectionSecondaryButton {
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+  font-size: .8rem !important;
+}
+
+/* avatar */
+.cl-avatarBox {
+  width: 64px !important;
+  height: 64px !important;
+  border: 2.5px solid #100E0A !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #100E0A !important;
+}
+
+/* badge أساسي */
+.cl-badge {
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+  font-size: .7rem !important;
+  background: #C8FF00 !important;
+  color: #100E0A !important;
+  border: 1.5px solid #A8D800 !important;
 }
 
 /* إخفاء شعار Clerk */
 .cl-internal-b3fm6y,
 [class*="cl-powered"] {
   display: none !important;
-}
-
-/* موبايل — عمود واحد */
-@media(max-width: 600px) {
-  .cl-userProfile-root { flex-direction: column !important; }
-  .cl-navbar { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 2px solid rgba(0,0,0,.08) !important; }
 }
 
 /* ══════════ NAV ══════════ */
