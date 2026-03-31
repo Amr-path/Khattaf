@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>خطّاف — خلّ منشورك يشتغل</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 34'%3E%3Cdefs%3E%3ClinearGradient id='fg' x1='0' y1='0' x2='28' y2='34' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%235B21B6'/%3E%3Cstop offset='.5' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%23C4BFFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M14 1C17.5 1 20.5 3.5 21 7C21.5 10.5 19.5 15 17 18L14 33L11 18C8.5 15 6.5 10.5 7 7C7.5 3.5 10.5 1 14 1Z' fill='url(%23fg)'/%3E%3Cpath d='M11 9C8 7.5 4.5 6.5 1 7.5C3.5 7.5 7 9 10.5 11.5Z' fill='url(%23fg)' opacity='.75'/%3E%3Cpath d='M17 9C20 7.5 23.5 6.5 27 7.5C24.5 7.5 21 9 17.5 11.5Z' fill='url(%23fg)' opacity='.75'/%3E%3Cellipse cx='14' cy='4' rx='2.5' ry='2' fill='url(%23fg)' opacity='.5'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@700;900&display=swap" rel="stylesheet"/>
@@ -88,58 +89,67 @@ body::after {
 
 /* ══════════ إصلاح تخطيط Clerk مع RTL ══════════ */
 
-/* الحل: نجبر كل Clerk على LTR حتى لا يكسر RTL الصفحة التخطيطَ الداخلي */
+/* نجبر Clerk على LTR حتى لا تنكسر flex/grid */
 [data-clerk-portal],
 [data-clerk-portal] * {
   direction: ltr !important;
   box-sizing: border-box !important;
 }
 
-/* نعيد العربي للنصوص فقط */
+/* نعيد محاذاة النصوص العربية */
 [data-clerk-portal] h1,
 [data-clerk-portal] h2,
+[data-clerk-portal] h3,
 [data-clerk-portal] p,
 [data-clerk-portal] label,
 [data-clerk-portal] a,
-[data-clerk-portal] span:not([class*="cl-badge"]) {
+[data-clerk-portal] button span,
+[data-clerk-portal] .cl-navbarButtonText,
+[data-clerk-portal] .cl-profileSectionTitle,
+[data-clerk-portal] .cl-profileSectionContent__profile,
+[data-clerk-portal] .cl-headerTitle,
+[data-clerk-portal] .cl-headerSubtitle {
   unicode-bidi: plaintext !important;
   text-align: right !important;
 }
 
-/* ── تسجيل الدخول ── */
+/* ── نافذة تسجيل الدخول ── */
 .cl-card {
-  width: clamp(340px, 480px, 92vw) !important;
+  width: clamp(340px, 480px, 94vw) !important;
 }
 
-/* ── صفحة الحساب: modal واسع ── */
-.cl-modalContent {
-  width: clamp(560px, 760px, 95vw) !important;
-  max-width: 95vw !important;
-  overflow: hidden !important;
+/* ── صفحة الحساب: مودال عريض جداً ── */
+.cl-modalContent:has(.cl-userProfile-root) {
+  width: min(900px, 97vw) !important;
+  max-width: 97vw !important;
+  padding: 0 !important;
 }
 
-/* نص ونص — sidebar : content */
 .cl-userProfile-root {
   display: flex !important;
   flex-direction: row !important;
   width: 100% !important;
+  min-height: 560px !important;
   overflow: hidden !important;
-  min-height: 520px !important;
 }
 
+/* sidebar — 220px ثابت */
 .cl-navbar {
-  width: 42% !important;
-  min-width: 160px !important;
+  width: 220px !important;
+  min-width: 220px !important;
   max-width: 220px !important;
   flex-shrink: 0 !important;
-  border-left: none !important;
   border-right: 2px solid rgba(0,0,0,.08) !important;
+  border-left: none !important;
   overflow-y: auto !important;
+  padding: 20px 0 !important;
 }
 
+/* content — يأخذ باقي الـ 680px */
 .cl-scrollBox {
   flex: 1 1 auto !important;
   min-width: 0 !important;
+  max-width: 100% !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
 }
@@ -148,6 +158,12 @@ body::after {
 .cl-internal-b3fm6y,
 [class*="cl-powered"] {
   display: none !important;
+}
+
+/* موبايل — عمود واحد */
+@media(max-width: 600px) {
+  .cl-userProfile-root { flex-direction: column !important; }
+  .cl-navbar { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 2px solid rgba(0,0,0,.08) !important; }
 }
 
 /* ══════════ NAV ══════════ */
