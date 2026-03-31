@@ -67,7 +67,7 @@ body::after {
 
 /* ══════════ CUSTOM CURSOR ══════════ */
 .cursor {
-  position:fixed; z-index:9999; pointer-events:none;
+  position:fixed; z-index:999999; pointer-events:none;
   width:14px; height:14px;
   background:var(--text);
   border-radius:50%;
@@ -87,37 +87,57 @@ body::after {
 }
 
 /* ══════════ إصلاح تخطيط Clerk مع RTL ══════════ */
-/* نافذة تسجيل الدخول — توسيط */
-.cl-modalContent,
+
+/* نافذة تسجيل الدخول — RTL */
 .cl-card {
   direction: rtl !important;
   text-align: right !important;
 }
 
-/* صفحة الحساب — إصلاح الـ sidebar المكسور */
-.cl-userProfile-root,
-.cl-profilePage,
-.cl-profileSection {
-  direction: rtl !important;
+/* صفحة الحساب — نتركها LTR لكن نعكس الترتيب */
+.cl-userProfile-root {
+  direction: ltr !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-/* navbar الجانبي — من اليمين */
+/* النص داخل صفحة الحساب — نعيد RTL على النص فقط */
+.cl-profileSectionTitle,
+.cl-profileSectionContent,
+.cl-profileSectionPrimaryButton,
+.cl-formFieldLabel,
+.cl-formFieldInput,
+.cl-headerTitle,
+.cl-headerSubtitle,
+.cl-navbarButton {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* navbar الجانبي — عرض ثابت */
 .cl-navbar {
-  direction: rtl !important;
-  border-left: none !important;
-  border-right: 2px solid rgba(0,0,0,.1) !important;
-  order: 1;
+  min-width: 180px !important;
+  width: 180px !important;
+  flex-shrink: 0 !important;
 }
 
-/* محتوى الصفحة */
+/* صندوق المحتوى الرئيسي */
 .cl-scrollBox {
-  direction: rtl !important;
-  order: 0;
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* الـ modal نفسه — عرض أكبر لصفحة الحساب */
+.cl-modalContent:has(.cl-userProfile-root) {
+  max-width: 720px !important;
+  width: 92vw !important;
 }
 
 /* إخفاء شعار Clerk */
 .cl-internal-b3fm6y,
-[class*="cl-powered"] {
+[class*="cl-powered"],
+.cl-userProfile-root .cl-navbar + * > [class*="footer"] {
   display: none !important;
 }
 
