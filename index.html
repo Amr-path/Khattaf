@@ -88,56 +88,58 @@ body::after {
 
 /* ══════════ إصلاح تخطيط Clerk مع RTL ══════════ */
 
-/* نافذة تسجيل الدخول — RTL */
-.cl-card {
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-/* صفحة الحساب — نتركها LTR لكن نعكس الترتيب */
-.cl-userProfile-root {
+/*
+  الحل الجذري: Clerk مصممة على LTR — نجبر كل عناصرها على LTR
+  ونحتفظ بالعربي فقط للنصوص عبر text-align:right
+*/
+[data-clerk-portal],
+[data-clerk-portal] *,
+.cl-rootBox,
+.cl-rootBox * {
   direction: ltr !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  unicode-bidi: isolate !important;
 }
 
-/* النص داخل صفحة الحساب — نعيد RTL على النص فقط */
-.cl-profileSectionTitle,
-.cl-profileSectionContent,
-.cl-profileSectionPrimaryButton,
-.cl-formFieldLabel,
-.cl-formFieldInput,
-.cl-headerTitle,
-.cl-headerSubtitle,
-.cl-navbarButton {
-  direction: rtl !important;
+/* نعيد محاذاة النصوص العربية يمين */
+[data-clerk-portal] h1,
+[data-clerk-portal] h2,
+[data-clerk-portal] p,
+[data-clerk-portal] label,
+[data-clerk-portal] button,
+[data-clerk-portal] span,
+[data-clerk-portal] a {
   text-align: right !important;
+  unicode-bidi: plaintext !important;
 }
 
-/* navbar الجانبي — عرض ثابت */
+/* حجم مناسب للـ modal */
+.cl-modalContent {
+  width: min(720px, 92vw) !important;
+  max-width: 92vw !important;
+}
+
+/* الكارد في شاشة تسجيل الدخول */
+.cl-card {
+  width: min(460px, 90vw) !important;
+}
+
+/* navbar ثابت العرض */
 .cl-navbar {
-  min-width: 180px !important;
-  width: 180px !important;
+  min-width: 176px !important;
+  width: 176px !important;
   flex-shrink: 0 !important;
 }
 
-/* صندوق المحتوى الرئيسي */
+/* محتوى الصفحة يأخذ باقي المساحة */
 .cl-scrollBox {
-  flex: 1 !important;
+  flex: 1 1 auto !important;
   min-width: 0 !important;
   overflow-y: auto !important;
 }
 
-/* الـ modal نفسه — عرض أكبر لصفحة الحساب */
-.cl-modalContent:has(.cl-userProfile-root) {
-  max-width: 720px !important;
-  width: 92vw !important;
-}
-
 /* إخفاء شعار Clerk */
 .cl-internal-b3fm6y,
-[class*="cl-powered"],
-.cl-userProfile-root .cl-navbar + * > [class*="footer"] {
+[class*="cl-powered"] {
   display: none !important;
 }
 
